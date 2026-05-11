@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        .container {
+            background: #2d2d2d;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #e0e0e0;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        .port-selector {
+            margin-bottom: 30px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #b0b0b0;
+            font-weight: bold;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn-on {
+            background-color: #ff9800;
+            color: white;
+        }
+        .btn-on:hover {
+            background-color: #e68900;
+        }
+        .btn-off {
+            background-color: #ff9800;
+            color: white;
+        }
+        .btn-off:hover {
+            background-color: #e68900;
+        }
+        .btn-blink {
+            background-color: #ff9800;
+            color: white;
+        }
+        .btn-blink:hover {
+            background-color: #e68900;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #2d5016;
+            color: #90ee90;
+            display: block;
+        }
+        .status.error {
+            background-color: #5a1a1a;
+            color: #ff6b6b;
+            display: block;
+        }
+        footer {
+            margin-top: 50px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>LED Control</h1>
+        
+        <div class="port-selector">
+            <label for="portSelect">Select Serial Port:</label>
+            <select id="portSelect">
+                {% for port in ports %}
+                <option value="{{ port.device }}">{{ port.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-on" onclick="sendCommand('ON')">Turn On</button>
+            <button class="btn-off" onclick="sendCommand('OFF')">Turn Off</button>
+            <button class="btn-blink" onclick="sendCommand('BLINK')">Blink</button>
+        </div>
+        
+        <div id="status" class="status"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Harshit Malik. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const portSelect = document.getElementById('portSelect');
+            if (portSelect.options.length > 0) {
+                portSelect.value = portSelect.options[0].value;
+            }
+        });
+
+        function sendCommand(command) {
+            const port = document.getElementById('portSelect').value;
+            const statusDiv = document.getElementById('status');
+            
+            if (!port) {
+                statusDiv.textContent = 'Please select a port first';
+                statusDiv.className = 'status error';
+                return;
+            }
+            
+            fetch(`/command/${port}/${command}`)
+                .then(response => response.json())
+                .then(data => {
+                    statusDiv.textContent = data.message;
+                    statusDiv.className = 'status ' + data.status;
+                    
+                    if (data.status === 'success') {
+                        setTimeout(() => {
+                            statusDiv.className = 'status';
+                        }, 3000);
+                    }
+                })
+                .catch(error => {
+                    statusDiv.textContent = 'Error: ' + error;
+                    statusDiv.className = 'status error';
+                });
+        }
+    </script>
+</body>
+</html>
